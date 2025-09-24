@@ -13,10 +13,18 @@ namespace GitSync
         public List<string> Repos { get; set; }
     }
 
+    public struct Optionals
+    {
+        public bool Apt { get; set; }
+        public bool FileSystem { get; set; }
+        public bool Snap { get; set; }
+    }
+
     public struct Config
     {
         public List<OrganizationConfig> Organizations { get; set; }
         public string Path { get; set; }
         public bool ExcludeArchived { get; set; }
+        public Optionals Optionals { get; set; }
     }
 }

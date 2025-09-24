@@ -4,6 +4,8 @@ using static GttrcrGist.Process;
 using static GitSync.Operations;
 using GttrcrGist;
 using System.Globalization;
+using System.Data;
+using System.Text.RegularExpressions;
 
 namespace GitSync
 {
@@ -58,6 +60,37 @@ namespace GitSync
             catch
             {
                 return false;
+            }
+        }
+
+        public static void ProcessOptionals(Optionals optionals)
+        {
+            if (optionals.Apt)
+            {
+                List<string> aptList = Run(new OSCommand() { OSPlatform = OSPlatform.Linux, Command = "apt list --installed" });
+
+                string pattern = @"\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.apt$";
+                List<string> aptFiles = [.. Directory.GetFiles(".")];
+                if (aptFiles.Count == 0)
+                    return;
+
+                string aptFile = aptFiles.Where(x => Regex.IsMatch(x, pattern)).Select(x => Path.GetFileName(x)).OrderByDescending(x => x).First();
+                List<string> lastAptLines = [.. File.ReadAllLines(aptFile)];
+                List<string> add = [.. aptList.Except(lastAptLines)];
+                List<string> removed = [.. lastAptLines.Except(aptList)];
+
+                if (add.Count > 0)
+                    Console.WriteLine("This has been added"); //TODO
+
+                if (removed.Count > 0)
+                    Console.WriteLine("This has been removed"); //TODO
+
+                File.WriteAllLines(DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".apt", aptList);
+            }
+
+            if (optionals.FileSystem)
+            {
+
             }
         }
 
@@ -136,6 +169,8 @@ namespace GitSync
                         mismatchFolders?.ForEach(x => MutexConsole.WriteLine(x));
                     }
                 });
+
+                ProcessOptionals(orgs.Value.Optionals);
             }
             catch (Exception ex)
             {
