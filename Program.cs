@@ -74,16 +74,18 @@ namespace GitSync
                 if (aptFiles.Count == 0)
                     return;
 
-                string aptFile = aptFiles.Where(x => Regex.IsMatch(x, pattern)).Select(x => Path.GetFileName(x)).OrderByDescending(x => x).First();
-                List<string> lastAptLines = [.. File.ReadAllLines(aptFile)];
+                List<string> lastAptLines = [];
+                aptFiles = [.. aptFiles.Where(x => Regex.IsMatch(x, pattern)).Select(x => Path.GetFileName(x)).OrderByDescending(x => x)];
+                if (aptFiles.Count > 0)
+                    lastAptLines = [.. File.ReadAllLines(aptFiles.First())];
+
                 List<string> add = [.. aptList.Except(lastAptLines)];
                 List<string> removed = [.. lastAptLines.Except(aptList)];
 
                 if (add.Count > 0)
-                    Console.WriteLine("This has been added"); //TODO
-
+                    Console.WriteLine($"{add.Count} new packages");
                 if (removed.Count > 0)
-                    Console.WriteLine("This has been removed"); //TODO
+                    Console.WriteLine($"{removed.Count} packages removed");
 
                 File.WriteAllLines(DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".apt", aptList);
             }
