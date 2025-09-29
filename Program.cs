@@ -69,25 +69,23 @@ namespace GitSync
             {
                 List<string> aptList = Run(new OSCommand() { OSPlatform = OSPlatform.Linux, Command = "apt list --installed" });
 
+                string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "/.gitsync";
+                Directory.CreateDirectory(home);
+
                 string pattern = @"\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.apt$";
-                List<string> aptFiles = [.. Directory.GetFiles(".")];
-                if (aptFiles.Count == 0)
-                    return;
-
-                List<string> lastAptLines = [];
-                aptFiles = [.. aptFiles.Where(x => Regex.IsMatch(x, pattern)).Select(x => Path.GetFileName(x)).OrderByDescending(x => x)];
+                List<string> aptFiles = [.. Directory.GetFiles(home)];
+                aptFiles = [.. aptFiles.Where(x => Regex.IsMatch(x, pattern)).Select(x => home + "/" + Path.GetFileName(x)).OrderByDescending(x => x)];
                 if (aptFiles.Count > 0)
-                    lastAptLines = [.. File.ReadAllLines(aptFiles.First())];
+                {
+                    List<string> lastAptLines = [.. File.ReadAllLines(aptFiles.First())];
+                    List<string> add = [.. aptList.Except(lastAptLines)];
+                    List<string> removed = [.. lastAptLines.Except(aptList)];
 
-                List<string> add = [.. aptList.Except(lastAptLines)];
-                List<string> removed = [.. lastAptLines.Except(aptList)];
+                    add.ForEach(x => Console.WriteLine("+ " + x));
+                    removed.ForEach(x => Console.WriteLine("- " + x));
+                }
 
-                if (add.Count > 0)
-                    Console.WriteLine($"{add.Count} new packages");
-                if (removed.Count > 0)
-                    Console.WriteLine($"{removed.Count} packages removed");
-
-                File.WriteAllLines(DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".apt", aptList);
+                File.WriteAllLines(home + "/" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".apt", aptList);
             }
 
             if (optionals.FileSystem)
