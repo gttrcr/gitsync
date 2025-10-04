@@ -81,7 +81,13 @@ namespace GitSync
                     List<string> add = [.. aptList.Except(lastAptLines)];
                     List<string> removed = [.. lastAptLines.Except(aptList)];
 
+                    List<string> changed = [.. add.Select(x => x.Split("/")[0]).Intersect(removed.Select(x => x.Split("/")[0]))];
+                    changed.ForEach(x => Console.WriteLine("-/+" + x));
+
+                    add = [.. add.Where(x => !changed.Contains(x.Split("/")[0]))];
                     add.ForEach(x => Console.WriteLine("+ " + x));
+
+                    removed = [.. removed.Where(x => !changed.Contains(x.Split("/")[0]))];
                     removed.ForEach(x => Console.WriteLine("- " + x));
                 }
 
