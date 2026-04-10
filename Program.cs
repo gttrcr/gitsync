@@ -114,7 +114,8 @@ namespace GitSync
                 {
                     string organization = orgs.Value.Organizations.ElementAt(i).Organization;
                     List<string> repos = orgs.Value.Organizations.ElementAt(i).Repos;
-                    List<string> remoteReposList = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = "gh repo list " + organization + " | awk '{ print $1 }'" }]).SelectMany(x => x)];
+                    List<string> remoteReposList = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"gh repo list {organization} | awk '{{ print $1 }}'" },
+                    new(){OSPlatform= OSPlatform.Windows, Command=$"gh repo list {organization} | for /f \"tokens=1\" %a in ('more') do @echo %a"}]).SelectMany(x => x)];
 
                     MutexConsole.WriteLine("Preparing " + organization + "...", null, ConsoleColor.Yellow);
                     if (remoteReposList.Count == 0)
@@ -126,7 +127,7 @@ namespace GitSync
                     remoteReposList = [.. remoteReposList.Select(x => x.Split('/').Last())];
 
                     if (orgs.Value.ExcludeArchived)
-                        remoteReposList = [.. remoteReposList.Where(x => Run([new() { OSPlatform = OSPlatform.Linux, Command = $"gh repo view {organization}/{x} --json isArchived --jq '.isArchived'" }]).SelectMany(x => x).ToList()[0] == "false")];
+                        remoteReposList = [.. remoteReposList.Where(x => Run([new() { Command = $"gh repo view {organization}/{x} --json isArchived --jq \".isArchived\"" }]).SelectMany(x => x).ToList()[0] == "false")];
 
                     if (repos.Contains("*"))
                         orgs.Value.Organizations[i] = new() { Organization = organization, Repos = [.. remoteReposList] };
@@ -145,7 +146,7 @@ namespace GitSync
                 }
 
                 int line = 0;
-                Parallel.ForEach(orgs.Value.Organizations, new ParallelOptions { MaxDegreeOfParallelism = 5 }, x => Parallel.ForEach(x.Repos, new ParallelOptions { MaxDegreeOfParallelism = 5 }, y => UpdateRepo(x.Organization, y, orgs.Value.Path, line++, false, 5, action)));
+                Parallel.ForEach(orgs.Value.Organizations, new ParallelOptions { MaxDegreeOfParallelism = 1 }, x => Parallel.ForEach(x.Repos, new ParallelOptions { MaxDegreeOfParallelism = 1 }, y => UpdateRepo(x.Organization, y, orgs.Value.Path, line++, false, 5, action)));
                 MutexConsole.WriteLine("Done", line);
 
                 MutexConsole.Clear();

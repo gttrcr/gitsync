@@ -10,7 +10,7 @@ namespace GitSync
 
         public static void UpdateRepo(string organization, string name, string path, int line, bool zeroLeft, int iterations, string? action)
         {
-            name = name.Split("/", StringSplitOptions.RemoveEmptyEntries).Last();
+            name = name.Split("/", StringSplitOptions.RemoveEmptyEntries).Last().Trim();
             string repoPath = Path.Combine(path, organization, name);
 
             try
@@ -19,20 +19,20 @@ namespace GitSync
                 if (!Directory.Exists(repoPath))
                 {
                     MutexConsole.WriteLine("Clone...", line);
-                    Run(null, "git clone --recurse-submodules -j8 git@github.com:" + organization + "/" + name + ".git " + repoPath);
+                    Run(null, $"git clone --recurse-submodules -j8 git@github.com:{organization}/{name}.git {repoPath}");
                     MutexConsole.WriteLine("done", line, ConsoleColor.Green);
                 }
                 else
                 {
-                    List<string> localBranches = Run(null, "git -C " + repoPath + " branch --format='%(refname:short)'");
-                    List<string> remoteBranches = Run(null, "git -C " + repoPath + " branch -r --format='%(refname:short)'");
-                    string currentBranch = Run(null, "git -C " + repoPath + " rev-parse --abbrev-ref HEAD")[0];
-                    MutexConsole.WriteLine("Pull (" + currentBranch + ")...", line);
-                    Run(null, "git -C " + repoPath + " pull");
-                    Run(null, "git -C " + repoPath + " submodule update --recursive --init");
+                    List<string> localBranches = Run(null, $"git -C {repoPath} branch --format=\"%(refname:short)\"");
+                    List<string> remoteBranches = Run(null, $"git -C {repoPath} branch -r --format=\"%(refname:short)\"");
+                    string currentBranch = Run(null, $"git -C {repoPath} rev-parse --abbrev-ref HEAD")[0];
+                    MutexConsole.WriteLine($"Pull ({currentBranch})...", line);
+                    Run(null, $"git -C {repoPath} pull");
+                    Run(null, $"git -C {repoPath} submodule update --recursive --init");
                     MutexConsole.WriteLine("Check...", line);
-                    Run(null, "git -C " + repoPath + " add .");
-                    if (Run(null, "git -C " + repoPath + " status --porcelain").Count > 0)
+                    Run(null, $"git -C {repoPath} add .");
+                    if (Run(null, $"git -C {repoPath} status --porcelain").Count > 0)
                     {
                         SomeDiff ??= [];
                         SomeDiff.Add(new() { Organization = organization, Name = name, Path = repoPath });
