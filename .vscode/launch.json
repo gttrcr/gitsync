@@ -14,7 +14,7 @@
                 "orgs.json"
             ],
             "cwd": "${workspaceFolder}",
-            "console": "externalTerminal",
+            "console": "internalConsole",
             "stopAtEntry": false
         },
         {

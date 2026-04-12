@@ -1,3 +1,5 @@
+using System.Data;
+using System.Runtime.InteropServices;
 using GttrcrGist;
 using static GttrcrGist.Process;
 
@@ -24,8 +26,10 @@ namespace GitSync
                 }
                 else
                 {
-                    List<string> localBranches = Run(null, $"git -C {repoPath} branch --format=\"%(refname:short)\"");
-                    List<string> remoteBranches = Run(null, $"git -C {repoPath} branch -r --format=\"%(refname:short)\"");
+                    List<string> localBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch --format='%(refname:short)'" },
+                    new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch --format=\"%(refname:short)\"" }]).Select(x => x[0])];
+                    List<string> remoteBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch -r --format='%(refname:short)'" },
+                    new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch -r --format=\"%(refname:short)\"" }]).Select(x => x[0])];
                     string currentBranch = Run(null, $"git -C {repoPath} rev-parse --abbrev-ref HEAD")[0];
                     MutexConsole.WriteLine($"Pull ({currentBranch})...", line);
                     Run(null, $"git -C {repoPath} pull");
