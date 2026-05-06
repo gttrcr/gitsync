@@ -127,7 +127,7 @@ namespace GitSync
                     remoteReposList = [.. remoteReposList.Select(x => x.Split('/').Last())];
 
                     if (orgs.Value.ExcludeArchived)
-                        remoteReposList = [.. remoteReposList.Where(x => Run([new() { Command = $"gh repo view {organization}/{x} --json isArchived --jq \".isArchived\"" }]).SelectMany(x => x).ToList()[0] == "false")];
+                        remoteReposList = [.. remoteReposList.Except(Run(null, $"gh repo list {organization} --archived --json name --jq \".[].name\""))];
 
                     if (repos.Contains("*"))
                         orgs.Value.Organizations[i] = new() { Organization = organization, Repos = [.. remoteReposList] };
