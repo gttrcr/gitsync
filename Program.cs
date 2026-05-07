@@ -140,13 +140,13 @@ namespace GitSync
 
                     if (repos.Any(x => x.StartsWith('-')))
                     {
-                        List<string> toRemove = [.. repos.Where(x => x.StartsWith('-')).Select(x => x.Substring(1, x.Length - 1))];
+                        List<string> toRemove = [.. repos.Where(x => x.StartsWith('-')).Select(x => x[1..])];
                         orgs.Value.Organizations[i] = new() { Organization = organization, Repos = [.. orgs.Value.Organizations[i].Repos.Where(x => !toRemove.Contains(x))] };
                     }
                 }
 
                 int line = 0;
-                Parallel.ForEach(orgs.Value.Organizations, new ParallelOptions { MaxDegreeOfParallelism = 5 }, x => Parallel.ForEach(x.Repos, new ParallelOptions { MaxDegreeOfParallelism = 5 }, y => UpdateRepo(x.Organization, y, orgs.Value.Path, line++, false, 5, action)));
+                Parallel.ForEach(orgs.Value.Organizations, new ParallelOptions { MaxDegreeOfParallelism = 3 }, x => Parallel.ForEach(x.Repos, new ParallelOptions { MaxDegreeOfParallelism = 3 }, y => UpdateRepo(x.Organization, y, orgs.Value.Path, line++, false, 5, action)));
                 MutexConsole.WriteLine("Done", line);
 
                 MutexConsole.Clear();
