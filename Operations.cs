@@ -26,10 +26,10 @@ namespace GitSync
                 }
                 else
                 {
-                    List<string> localBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch --format='%(refname:short)'" },
-                    new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch --format=\"%(refname:short)\"" }]).Select(x => x[0])];
-                    List<string> remoteBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch -r --format='%(refname:short)'" },
-                    new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch -r --format=\"%(refname:short)\"" }]).Select(x => x[0])];
+                    //List<string> localBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch --format='%(refname:short)'" },
+                    //new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch --format=\"%(refname:short)\"" }]).Select(x => x[0])];
+                    //List<string> remoteBranches = [.. Run([new() { OSPlatform = OSPlatform.Linux, Command = $"git -C {repoPath} branch -r --format='%(refname:short)'" },
+                    //new() { OSPlatform = OSPlatform.Windows, Command = $"git -C {repoPath} branch -r --format=\"%(refname:short)\"" }]).Select(x => x[0])];
                     string currentBranch = Run(null, $"git -C {repoPath} rev-parse --abbrev-ref HEAD")[0];
                     MutexConsole.WriteLine($"Pull ({currentBranch})...", line);
                     Run(null, $"git -C {repoPath} pull");
@@ -61,7 +61,10 @@ namespace GitSync
                     UnableToComplete.Add(new() { Organization = organization, Name = name, Path = repoPath });
                 }
                 else
+                {
+                    Thread.Sleep(5000);   
                     UpdateRepo(organization, name, path, line, true, iterations - 1, action);
+                }
             }
         }
     }
