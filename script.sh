@@ -1,19 +1,24 @@
-bold=$(tput bold)
-normal=$(tput sgr0)
+BOLD=$(tput bold)
+NORMAL=$(tput sgr0)
 RED="\e[31m"
 ORANGE="\e[93m"
 GREEN="\e[32m"
 ENDCOLOR="\e[0m"
-organizations=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026")
-
 clear
+
+organizations=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026" "cate5196")
+echo "${BOLD}gitsync${NORMAL} has started over"
 
 # compute the number of repos
 tot=0
 for organization in "${organizations[@]}"
 do
-	tot=$(echo $tot+`gh repo list $organization --json name --jq ".[].name" | wc -l` | bc -l)
+	current=`gh repo list $organization --json name --jq ".[].name" | wc -l`
+	tot=$(echo $tot+$current | bc -l)
+	echo -e "\t${BOLD}$organization${NORMAL} with $current repositories"
 done
+
+echo -e "\n\tTotal $tot repositories\n"
 
 # do the job
 idx=1
@@ -22,8 +27,7 @@ do
 	for repo in $(gh repo list $organization --json name --jq ".[].name");
 	do
 		dir="/home/iki/git/"$organization"/"$repo
-		echo "scale=3; 100*"$idx/$tot | bc -l | awk '{printf "%.3f", $0}'
-		printf "%-60s" "%) "${bold}$dir${normal}
+		printf "%-70s" $(printf "%03d" $idx)/$tot") "${BOLD}$dir${NORMAL}
 		((idx++))
 		
 		if [ -d "$dir" ]; then
@@ -41,18 +45,18 @@ do
 			echo -ne "checking..."
 			git -C $dir add .
 
-
 			if [[ $(git -C $dir status --porcelain) ]]; then
-				echo -e $ORANGE"some diff!"$ENDCOLOR
+				echo -ne $ORANGE"some diff!"$ENDCOLOR
 			else
-				echo -e $GREEN"done!"$ENDCOLOR
+				echo -ne $GREEN"done!"$ENDCOLOR
 			fi
 		else
 			echo -ne $ORANGE"cloning..."$ENDCOLOR
-			git clone --recurse-submodules -j8 git@github.com:$organization/$repo.git $dir &> /dev/null
-			echo -e $GREEN"done!"$ENDCOLOR
+			git clone --recurse-submodules -j8 git@github.com:$organization/$repo.git $dir
+			echo -ne $GREEN"done!"$ENDCOLOR
 		fi
 		
-		sleep 5
+		echo
+		for i in {5..0}; do sleep 1; printf "\r$i\r"; done
 	done
 done
