@@ -4,9 +4,15 @@ RED="\e[31m"
 ORANGE="\e[93m"
 GREEN="\e[32m"
 ENDCOLOR="\e[0m"
+ORGS=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026" "cate5196")
 clear
 
-organizations=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026" "cate5196")
+if [ -z "$1" ]; then
+	organizations=("${ORGS[@]}")
+else
+	organizations=($1)
+fi
+
 echo "${BOLD}gitsync${NORMAL} has started over"
 
 # compute the number of repos
