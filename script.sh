@@ -7,6 +7,9 @@ ENDCOLOR="\e[0m"
 ORGS=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026" "cate5196")
 clear
 
+log=$(date '+%d/%m/%Y %H:%M:%S')
+echo "$log" >> ~/.gitsync
+
 if [ -z "$1" ]; then
 	organizations=("${ORGS[@]}")
 else
