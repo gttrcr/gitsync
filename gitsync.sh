@@ -31,6 +31,7 @@ echo -e "\n\tTotal $tot repositories\n"
 
 # cycle for every organizations
 idx=1
+never=true
 for organization in "${organizations[@]}"
 do
 	# cycle for every repo in organization
@@ -60,6 +61,7 @@ do
 			git -C $dir add .
 
 			if [[ $(git -C $dir status --porcelain) ]]; then
+				never=false
 				echo -e $ORANGE"some diff!"$ENDCOLOR
 			else
 				echo -ne $GREEN"done..."$ENDCOLOR
@@ -74,3 +76,7 @@ do
 		fi
 	done
 done
+
+if $never; then
+	echo "Oh, come on! There is absolutely nothing you need to do today. Go for a run!"
+fi
