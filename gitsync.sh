@@ -4,7 +4,7 @@ RED="\e[31m"
 ORANGE="\e[93m"
 GREEN="\e[32m"
 ENDCOLOR="\e[0m"
-ORGS=("gttrcr" "eaziu" "magnethica" "wide3network" "academyforma2026" "cate5196")
+ORGS=("gttrcr" "eaziu" "magnethica" "wide3network" "cate5196")
 clear
 
 log=$(date '+%d/%m/%Y %H:%M:%S')
@@ -44,6 +44,7 @@ do
 			# git push --all origin
 			# git fetch --prune
 
+			git -C $dir config pull.rebase false
 			local_branch=$(git -C $dir branch --format='%(refname:short)')
 			remote_branch=$(git -C $dir branch -r --format='%(refname:short)')
 			current_branch=$(git -C $dir rev-parse --abbrev-ref HEAD)
@@ -59,17 +60,17 @@ do
 			git -C $dir add .
 
 			if [[ $(git -C $dir status --porcelain) ]]; then
-				echo -ne $ORANGE"some diff!"$ENDCOLOR
+				echo -e $ORANGE"some diff!"$ENDCOLOR
 			else
-				echo -ne $GREEN"done!"$ENDCOLOR
+				echo -ne $GREEN"done..."$ENDCOLOR
+				printf '\r%s%s' "$(tput el)"
 			fi
 		else
 			echo -ne $ORANGE"cloning..."$ENDCOLOR
 			git clone --recurse-submodules -j8 git@github.com:$organization/$repo.git $dir
+			git -C $dir config pull.rebase false
 			echo -ne $GREEN"done!"$ENDCOLOR
+			printf '\r%s%s' "$(tput el)"
 		fi
-
-		echo
-		for i in {5..0}; do sleep 1; printf "\r$i\r"; done
 	done
 done
