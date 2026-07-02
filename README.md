@@ -1,13 +1,9 @@
 # GitSync
 
-GitSync is a file manager based on GitHub. It is written in c# and compiled under dotnet. Hence,
+GitSync is GitHub-based file manager written in bash.
 
-```bash
-sudo apt install dotnet7 -y
-dotnet run orgs.json
-```
-
-where ```orgs.json``` is just a configuration file for GitSync. The structure of the ```orgs.json``` is the following:
+## Configuration
+```orgs.json``` is just a configuration file for GitSync. The structure of the ```orgs.json``` is the following:
 
 ```json
 {
@@ -44,19 +40,13 @@ The value ```"*"``` in ```Repos``` key means _every repo_ is the corresponding o
 
 ```bash
 cat >>~/.bashrc <<EOL
-
 gitsync() {
-    if [ -z "$1" ]
-    then
-        dotnet run --project path_to_folder/GitSync/ path_to_folder/GitSync/orgs.json
-    else
-        dotnet run --project path_to_folder/GitSync/ path_to_folder/GitSync/orgs.json $1
-    fi
+    /home/iki/git/gttrcr/gitsync/script.sh "$1"
 }
 EOL
 ```
 
-Consider the command for future improvements
+## Future improvements
 
 ```bash
 git submodule update --remote --recursive --merge --init --force

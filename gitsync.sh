@@ -29,22 +29,26 @@ done
 
 echo -e "\n\tTotal $tot repositories\n"
 
-# do the job
+# cycle for every organizations
 idx=1
 for organization in "${organizations[@]}"
 do
+	# cycle for every repo in organization
 	for repo in $(gh repo list $organization --json name --jq ".[].name");
 	do
 		dir="/home/iki/git/"$organization"/"$repo
 		printf "%-70s" $(printf "%03d" $idx)/$tot") "${BOLD}$dir${NORMAL}
 		((idx++))
-		
+
 		if [ -d "$dir" ]; then
+			# git push --all origin
+			# git fetch --prune
+
 			local_branch=$(git -C $dir branch --format='%(refname:short)')
 			remote_branch=$(git -C $dir branch -r --format='%(refname:short)')
 			current_branch=$(git -C $dir rev-parse --abbrev-ref HEAD)
 			printf '%-20s' $current_branch
-			
+
 			echo -ne "pulling..."
 			git -C $dir pull | grep -v "Already up to date."
 
@@ -64,7 +68,7 @@ do
 			git clone --recurse-submodules -j8 git@github.com:$organization/$repo.git $dir
 			echo -ne $GREEN"done!"$ENDCOLOR
 		fi
-		
+
 		echo
 		for i in {5..0}; do sleep 1; printf "\r$i\r"; done
 	done
