@@ -78,5 +78,5 @@ do
 done
 
 if $never; then
-	echo "Oh, come on! There is absolutely nothing you need to do today. Go for a run!"
+	echo "Oh, come on! There is absolutely nothing you need to do today in github. Go for a run!"
 fi
