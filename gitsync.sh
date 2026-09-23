@@ -1,3 +1,5 @@
+#!/bin/bash
+
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 RED="\e[31m"
@@ -18,11 +20,16 @@ fi
 
 echo "${BOLD}gitsync${NORMAL} has started over"
 
-# compute the number of repos
+# associative array: organization -> newline separated list of remote repo names
+declare -A REMOTE_REPOS
+
+# compute the number of repos (and cache the remote repo list per organization)
 tot=0
 for organization in "${organizations[@]}"
 do
-	current=`gh repo list $organization --json name --jq ".[].name" | wc -l`
+	current_list=$(gh repo list $organization --json name --jq ".[].name")
+	REMOTE_REPOS[$organization]="$current_list"
+	current=$(echo "$current_list" | grep -c .)
 	tot=$(echo $tot+$current | bc -l)
 	echo -e "\t${BOLD}$organization${NORMAL} with $current repositories"
 done
@@ -35,7 +42,7 @@ never=true
 for organization in "${organizations[@]}"
 do
 	# cycle for every repo in organization
-	for repo in $(gh repo list $organization --json name --jq ".[].name");
+	for repo in ${REMOTE_REPOS[$organization]};
 	do
 		dir="/home/iki/git/"$organization"/"$repo
 		printf "%-70s" $(printf "%03d" $idx)/$tot") "${BOLD}$dir${NORMAL}
@@ -79,4 +86,28 @@ done
 
 if $never; then
 	echo "Oh, come on! There is absolutely nothing you need to do today in github. Go for a run!"
+fi
+
+# check for local folders that have no matching remote repository
+# (repo deleted on GitHub, or a local-only repo/folder never pushed)
+echo -e "\n${BOLD}Checking for local folders without a matching remote repo...${NORMAL}"
+found_orphans=false
+for organization in "${organizations[@]}"
+do
+	org_dir="/home/iki/git/$organization"
+	[ -d "$org_dir" ] || continue
+
+	for local_dir in "$org_dir"/*/; do
+		[ -d "$local_dir" ] || continue
+		repo_name=$(basename "$local_dir")
+
+		if ! grep -qxF "$repo_name" <<< "${REMOTE_REPOS[$organization]}"; then
+			found_orphans=true
+			echo -e "\t${RED}$org_dir/$repo_name${ENDCOLOR} -> nessuna repo remota corrispondente"
+		fi
+	done
+done
+
+if ! $found_orphans; then
+	echo -e "\t${GREEN}Nessuna cartella orfana trovata.${ENDCOLOR}"
 fi
