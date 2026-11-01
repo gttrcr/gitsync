@@ -59,7 +59,7 @@ do
 			printf '%-20s' $current_branch
 
 			echo -ne "pulling..."
-			git -C $dir pull | grep -v "Already up to date."
+			git -C $dir pull > /dev/null
 
 			echo -ne "updating..."
 			git -C $dir submodule update --recursive --init
