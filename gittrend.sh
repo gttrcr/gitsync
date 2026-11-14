@@ -9,13 +9,47 @@ if ! git -C "$REPO_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 OUTPUT_FILE="repo_line_growth.csv"
-echo "CommitHash,CommitTimestamp,TotalLines,CommitSubject" > "$OUTPUT_FILE"
+
+# Variabile per memorizzare da dove riprendere
+resume_from=""
+
+if [ -f "$OUTPUT_FILE" ] && [ -s "$OUTPUT_FILE" ]; then
+	# Prende l'ultima riga del file CSV e isola il primo campo (CommitHash)
+	last_line=$(tail -n 1 "$OUTPUT_FILE")
+	last_commit=$(echo "$last_line" | awk -F',' '{print $1}')
+
+	# Verifica che l'hash estratto esista nel repository corrente
+	if [ -n "$last_commit" ] && git -C "$REPO_PATH" rev-parse --verify "$last_commit^{commit}" >/dev/null 2>&1; then
+		resume_from="$last_commit"
+	else
+		echo "Warning: L'ultimo commit registrato nel file non è valido o non esiste in questo repo. Ricindo da capo." >&2
+		rm -f "$OUTPUT_FILE"
+	fi
+fi
+
+# Se il file non esiste (o è stato eliminato perché non valido), crealo con l'intestazione
+if [ ! -f "$OUTPUT_FILE" ]; then
+	echo "CommitHash,CommitTimestamp,TotalLines,CommitSubject" > "$OUTPUT_FILE"
+fi
+
 echo "--------------------------------------------------------------------------------"
 echo "Analyzing repository: $(realpath "$REPO_PATH")"
 echo "Exporting to: $OUTPUT_FILE"
+if [ -n "$resume_from" ]; then
+	echo "Resuming from last recorded commit: ${resume_from:0:8}"
+else
+	echo "Starting fresh analysis from the first commit."
+fi
 echo "--------------------------------------------------------------------------------"
 
-git -C "$REPO_PATH" log --reverse --format="%H|%at|%s" | while IFS='|' read -r commit_hash commit_timestamp commit_msg; do
+# Imposta il comando git log: se c'è un punto di ripresa, usa il range (esclude il commit già salvato e prende i successivi)
+if [ -n "$resume_from" ]; then
+	git_log_cmd=(git -C "$REPO_PATH" log "${resume_from}..HEAD" --reverse --format="%H|%at|%s")
+else
+	git_log_cmd=(git -C "$REPO_PATH" log --reverse --format="%H|%at|%s")
+fi
+
+"${git_log_cmd[@]}" | while IFS='|' read -r commit_hash commit_timestamp commit_msg; do
 	total_lines=0
 	while read -r mode type blob_hash file_path; do
 		if [ "$type" = "blob" ]; then
@@ -29,5 +63,5 @@ git -C "$REPO_PATH" log --reverse --format="%H|%at|%s" | while IFS='|' read -r c
 done
 
 echo "--------------------------------------------------------------------------------"
-echo "Done! File successfully generated: $OUTPUT_FILE"
+echo "Done! File successfully updated: $OUTPUT_FILE"
 echo "--------------------------------------------------------------------------------"
